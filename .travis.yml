@@ -1,4 +1,18 @@
+sudo: required
+
 language: go
+
+services:
+  - docker
 
 go:
   - 1.6
+
+before_install:
+  - sudo curl -L https://github.com/docker/compose/releases/download/1.7.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+  - sudo chmod +x /usr/local/bin/docker-compose
+
+script:
+  - GOOS=linux go build
+  - docker-compose up -d --build
+  - go test ./integration-test --tags integration
