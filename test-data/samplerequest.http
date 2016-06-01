@@ -1,0 +1,26 @@
+POST /batch HTTP/1.1
+Host: localhost:8080
+Content-Length: 469
+Content-Type: multipart/mixed; boundary="===============7330845974216740156=="
+
+
+--===============7330845974216740156==
+Content-Type: application/http
+Content-Transfer-Encoding: binary
+Content-ID: <b29c5de2-0db4-490b-b421-6a51b598bd22+1>
+
+GET /some/thing HTTP/1.1
+Host: serverA:8080
+Accept: */*
+
+
+--===============7330845974216740156==
+Content-Type: application/http
+Content-Transfer-Encoding: binary
+Content-ID: <b29c5de2-0db4-490b-b421-6a51b598bd22+2>
+
+POST http://serverB:8080/weeee HTTP/1.1
+Accept: */*
+
+
+--===============7330845974216740156==--

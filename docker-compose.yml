@@ -1,0 +1,18 @@
+version: "2"
+
+services:
+  httpbatcher:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - serverA
+      - serverB
+  serverA:
+    image: rodolpheche/wiremock
+    ports:
+      - "9001:8080"
+  serverB:
+    image: rodolpheche/wiremock
+    ports:
+      - "9002:8080"
