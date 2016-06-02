@@ -21,5 +21,7 @@ install: go get -t -d --tags integration ./...
 
 script:
   - GOOS=linux go build
-  - docker-compose up -d --build
+  - docker-compose build
+  - docker-compose up -d
+  - wait 5
   - go test ./integration-test --tags integration
