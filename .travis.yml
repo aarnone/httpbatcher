@@ -9,17 +9,16 @@ go:
   - 1.6
 
 env:
-  DOCKER_VERSION: 1.10.1-0~trusty
+  DOCKER_VERSION: 1.11.1-0~precise
   DOCKER_COMPOSE_VERSION: 1.7.1
 
 before_install:
-  - sudo apt-get update
-
-  # list docker-engine versions
-  - apt-cache madison docker-engine
-
   # upgrade docker-engine to specific version
-  - sudo apt-get -o Dpkg::Options::="--force-confnew" install -y docker-engine=${DOCKER_VERSION}
+  - sudo sh -c 'echo "deb https://apt.dockerproject.org/repo ubuntu-precise main" > /etc/apt/sources.list.d/docker.list'
+  - sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+  - sudo apt-get update
+  - sudo apt-key update
+  - sudo apt-get -qqy -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install docker-engine=${DOCKER_VERSION}
 
   # upgrade docker-compose to specific version
   - sudo rm /usr/local/bin/docker-compose
