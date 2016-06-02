@@ -17,6 +17,8 @@ before_install:
   - chmod +x docker-compose
   - sudo mv docker-compose /usr/local/bin
 
+install: go get -t --tags integration ./... 
+
 script:
   - GOOS=linux go build
   - docker-compose up -d --build
