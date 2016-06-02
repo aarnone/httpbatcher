@@ -9,6 +9,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -26,7 +27,7 @@ func init() {
 			panic(err)
 		}
 
-		dockerHostname = dockerHostURL.Host
+		dockerHostname = strings.Split(dockerHostURL.Host, ":")[0]
 	}
 }
 
