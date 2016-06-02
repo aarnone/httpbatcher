@@ -33,5 +33,4 @@ script:
   - GOOS=linux go build
   - docker-compose build
   - docker-compose up -d
-  - wait 5
   - go test ./integration-test --tags integration
