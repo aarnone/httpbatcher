@@ -13,7 +13,7 @@ env:
   DOCKER_COMPOSE_VERSION: 1.7.1
 
 before_install:
-  - apt-get update
+  - sudo apt-get update
 
   # list docker-engine versions
   - apt-cache madison docker-engine
