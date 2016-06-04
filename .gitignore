@@ -25,3 +25,4 @@ _testmain.go
 
 # exclude the exectuable 
 httpbatcher
+!cmd/httpbatcher

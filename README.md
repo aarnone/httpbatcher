@@ -14,7 +14,7 @@ $ go build
 
 To run the integration test suite you'll need docker and docker-compose available, and run:
 ```
-$ GOOS=linux go build
+$ GOOS=linux go build ./cmd/httpbatcher
 $ docker-compose up -d --build
 $ go test ./integration-test --tags integration
 $ docker-compose down -v --rmi local
