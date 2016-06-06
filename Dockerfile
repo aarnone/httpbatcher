@@ -1,12 +1,12 @@
-FROM debian:jessie
+FROM golang:1.6-alpine
 
 MAINTAINER Alessandro Arnone <arnone.alessandro@gmail.com>
 
-RUN apt-get update
-RUN apt-get install -y ca-certificates
+ADD . /go/src/github.com/aarnone/httpbatcher
 
-COPY ./httpbatcher /httpbatcher
+# The binary is created in the cmd/httpbatcher package
+RUN go install github.com/aarnone/httpbatcher/cmd/httpbatcher
+
+ENTRYPOINT /go/bin/httpbatcher
 
 EXPOSE 8080
-
-CMD ["/httpbatcher"]

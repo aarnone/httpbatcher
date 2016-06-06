@@ -31,7 +31,6 @@ install: go get -t -d --tags integration ./...
 
 script:
   - go test -v
-  - GOOS=linux go build ./cmd/httpbatcher
   - docker-compose build
   - docker-compose up -d
   - go test -v ./integration-test --tags integration
