@@ -12,6 +12,11 @@ env:
   DOCKER_VERSION: 1.11.1-0~trusty
   DOCKER_COMPOSE_VERSION: 1.7.1
 
+  global:
+    - secure: "nd44XUfqfP1WH7M5+EYtFGEUHOSNyu2zn4BDRzLrZ2k8K+vY4SpErxgIedkGblvQbjAE12lcovoyyEav9nS+l3X+9WV2zxAZYH68QheaIK2SjlNI9V5MllWFqLVI1bVCXVpFKVIqzYA+wE4csPcrThlx35dkBPVQUUn2NP4991WL4UypzPA70iDUslwrUDvHQpU5LxyquGdnsEdOEGJw7R6MXkLRL1kNuucyXaHSE3xnMa5xcloJrscKa5SVt3AnA2BtzLEYPrRYUSKY+DJbRGcx4XKQayat3ioFo4yclEET7XUoVORBz53/xAfXyPAvE0VHtptrvgQfjDWtkbTFc3NJJi1UMUYv+eaioQnpQQX/i2kotrHzcoHNMsmLyMyxJuk7FPuLwia/tCjYueJ2q8SejGg5s48u+DHnqoBrkIbTSAXYY5lBKOW4xfMMBQlxDR7GG6N44BPjE1lnNP8QxxRc5N4tNZYm/SEw97/ENUncrN1nRVYB0bQ0GmWjKMkPeTOksLIP/cf3Ie5Xzc0GGTTszDN9ffSygZQSXHbOu3/3FWg2eJU+baXiZyx4qaH0zmpblB9RNbeRXdez3e4jc9/kJdRL0gEd9zb/7o/G2Itf3B/dNYnPnIRpkUC71mtPImRbb4ihyZ+Frv54hGaxhVnHhKpP/uu46ndP0Q47sWI="
+    - secure: "XFI13c5UGvnldSBPn3sb8jiUIx96pmOAG9pEzJHi5qZyi9uheLEq2vSLUbhm/gVGRos0h4BhS5zB7AF/KGSyyXxbZhKVDJZlCLUHWs3ftLeBAftFOxYO9ygIU3TzKrgo2Sry5zKI9pN2ShskU9a1MgmNy6mdvc8dwsv8fBfVZAFI2AhEjd1KQw/Z5XsgmsJk7qbEYmtGROfywajZDTVkzY8078WxqeCL7+uS+LJOVOVCk23ep9JjgoobtNgKI3DtIh8bm0/hcd03/DAc84QK1AIslRfwsu64iR46RdSKqFSByJZPfg4FBK7ubCWXu/viOoFDsDvK56Hr2l4JU3E4fSY4VdGtOo3BPgN/soq/g8JZtXcrKb7fzZ6tO1emKn+x3gH9Do0iVqpUY6nNXeArCFZwRGplAWGxuHKecUp/8s2L092VYOfRe+PHHCx16IPKMA+83RnlUv+ElStFhJbTzbzRYXwAI50M3v/8ZZ539KIZkrkc5lhsGF8UcJ/aTM+QSvI7wA4XAT45FN92KAi9SDgOhhd1/2W9mWKWzW50Rzz+IKI+hCkWqY9V2liXauFX9aLWdA/99SXYRejsAYkt6wxwbgMaUxstnF59/OUv8UYiOMsDZ/qyGlpzWeZuJo4ue50hJbcRZnSfZLRcgUkddLcJ3DSJQTX8pjQLzUDv0qU="
+    - secure: "WTjkHphXwPRD2B7l5I27RAjW3Jqu6dchom65PC8/0OXx+6ULlX5CUiPl84v+rm2Ji+P3EdBj6mSWj4sMLQzIUk23Tt0RmywBaj+eYkE+lDXH09kD1wtS8HCtBO/XAnxQrKMI8xRK+VnpHA9M3hK1CD4UgoqP32Ot/NiKp4VIeKRCCBLH2XJat0sECbLgmvbI1tKCs4OskyxL9rSqS6eTfvWtwJEiSSqpX/xMO9GRrti8l39o6BZeZlR6L4U5mPRt80bt1awX1xhYl87rW8yL3DWQ30KguZFj3A4VBnBS14DLG/2xYMVF6TNal7Dzie2OlFeCLQnRDBxpZKTPwdan6y4hr99g8xzEXamNZi/bBGZbMjCNcK+j8JCBTdhPc0V0hWM0AbhOCkYyKtDjkL8U31DRLZkLiATvUBGwtImx0irJZiqUtG9BS4XbfxEGc67AcD0U96dKeUFJs9PwweBItJt05M4xoNl1kQ5bdg/ATyrCg6Agb7TFg49rpxgHfKHmosNICO7g/w3lZ/ilshyj4W02n6Bguu4X6Zcq/EMUW+jG4k2HEVxk6mWseQryyQiHsQeJgKqypzBjuI6jBd//Cy/ri3qCggrTcV/z2X5FuHQFCJBuqSKwVmGYI4cmXoEqL7t3JdzhvjEhZBLmtz0mlogdbIPBF/4GTDsvFpf+gRc="
+
 before_install:
   # upgrade docker-engine to specific version
   - sudo sh -c 'echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" > /etc/apt/sources.list.d/docker.list'
@@ -34,3 +39,7 @@ script:
   - docker-compose build
   - docker-compose up -d
   - go test -v ./integration-test --tags integration
+
+after_success:
+  - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+  - docker push aarnone/httpbatcher

@@ -3,6 +3,7 @@ version: "2"
 services:
   httpbatcher:
     build: .
+    image: aarnone/httpbatcher
     ports:
       - "8080:8080"
     depends_on:
