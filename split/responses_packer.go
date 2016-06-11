@@ -26,6 +26,7 @@ func WriteResponses(w http.ResponseWriter, responses []*http.Response) error {
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", mime.FormatMediaType("multipart/mixed", map[string]string{"boundary": multipartWriter.Boundary()}))
+	w.WriteHeader(http.StatusOK)
 	buf.WriteTo(w)
 	return nil
 }
