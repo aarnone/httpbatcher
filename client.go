@@ -19,7 +19,7 @@ var ErrInvalidMediaType = fmt.Errorf("Expected media type multipart/mixed")
 var ErrMultipartBoundaryNotDefined = fmt.Errorf("Media type multipart/mixed require boundary parameter")
 
 // BuildRequest encode a slice of requests into a single, multipart one
-func BuildRequest(requests []*http.Request, targetURL string) (*http.Request, error) {
+func BuildRequest(targetURL string, requests ...*http.Request) (*http.Request, error) {
 
 	var body bytes.Buffer
 	req, err := http.NewRequest(http.MethodPost, targetURL, &body)

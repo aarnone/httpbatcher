@@ -45,7 +45,7 @@ func TestRoundTrip(t *testing.T) {
 	require.Nil(t, err)
 	r2.Header.Set("Content-Type", "test/test")
 
-	fatRequest, err := httpbatcher.BuildRequest([]*http.Request{r1, r2}, "http://"+dockerHostname+":8080/batch")
+	fatRequest, err := httpbatcher.BuildRequest("http://"+dockerHostname+":8080/batch", r1, r2)
 	require.Nil(t, err)
 
 	// and

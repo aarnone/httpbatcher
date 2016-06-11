@@ -17,7 +17,7 @@ import (
 
 func TestBuildRequestWithoutError(t *testing.T) {
 	// when
-	fatRequest, err := BuildRequest(someRequests(3), "http://batcher/batch")
+	fatRequest, err := BuildRequest("http://batcher/batch", someRequests(3)...)
 
 	// then no error is returned
 	assert.Nil(t, err)
@@ -26,7 +26,7 @@ func TestBuildRequestWithoutError(t *testing.T) {
 
 func TestBuildRequestWithInvalidURL(t *testing.T) {
 	// when
-	fatRequest, err := BuildRequest(someRequests(3), ":localhost")
+	fatRequest, err := BuildRequest(":localhost", someRequests(3)...)
 
 	// then no error is returned
 	assert.NotNil(t, err)
@@ -35,7 +35,7 @@ func TestBuildRequestWithInvalidURL(t *testing.T) {
 
 func TestBuildRequestCreatesTheWrapperRequest(t *testing.T) {
 	// when
-	fatRequest, _ := BuildRequest(someRequests(3), "http://batcher/batch")
+	fatRequest, _ := BuildRequest("http://batcher/batch", someRequests(3)...)
 
 	// then request is POST http://batcher/batch
 	assert.Equal(t, http.MethodPost, fatRequest.Method)
@@ -53,7 +53,7 @@ func TestBuildRequestAllThePartsAreCreated(t *testing.T) {
 	reqs := someRequests(3)
 
 	// when
-	fatRequest, _ := BuildRequest(reqs, "")
+	fatRequest, _ := BuildRequest("", reqs...)
 
 	// then all the parts are bundled in order
 	r := parseMultipartBody(fatRequest)
@@ -74,7 +74,7 @@ func TestBuildRequestWithBody(t *testing.T) {
 	reqWithBody, _ := http.NewRequest(http.MethodPost, "http://somehost/resource/path", strings.NewReader("some content"))
 
 	// when
-	fatRequest, _ := BuildRequest([]*http.Request{reqWithBody}, "localhost")
+	fatRequest, _ := BuildRequest("localhost", reqWithBody)
 
 	// then
 	mpr := parseMultipartBody(fatRequest)
@@ -92,7 +92,7 @@ func TestBuildRequestWithHeader(t *testing.T) {
 	reqWithHeader.Header.Set("Custom-Header", "custom value")
 
 	// when
-	fatRequest, _ := BuildRequest([]*http.Request{reqWithHeader}, "localhost")
+	fatRequest, _ := BuildRequest("localhost", reqWithHeader)
 
 	// then
 	mpr := parseMultipartBody(fatRequest)
@@ -109,7 +109,7 @@ func TestBuildRequestPreseveSchema(t *testing.T) {
 	reqHTTPS, _ := http.NewRequest(http.MethodPost, "https://somehost/resource/path", nil)
 
 	// when
-	fatRequest, _ := BuildRequest([]*http.Request{reqHTTPS}, "localhost")
+	fatRequest, _ := BuildRequest("localhost", reqHTTPS)
 
 	// then
 	mpr := parseMultipartBody(fatRequest)
