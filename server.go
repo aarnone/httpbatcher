@@ -11,5 +11,7 @@ func New() http.Handler {
 }
 
 func (b *batcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
 }
