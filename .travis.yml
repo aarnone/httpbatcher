@@ -41,4 +41,4 @@ script:
 
 after_success:
   - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-  - docker push aarnone/httpbatcher
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then docker push aarnone/httpbatcher; fi
