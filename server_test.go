@@ -44,3 +44,66 @@ func TestHandlerRejectNonPOSTMethods(t *testing.T) {
 		}
 	}
 }
+
+func TestHandlerFailIfContentTypeMalformed(t *testing.T) {
+	// given an httpbatcher
+	batcherHandler := New()
+
+	// and a request with a maflormed content type
+	req, err := http.NewRequest("POST", "localhost", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header.Set("Content-Type", "")
+
+	// when
+	rr := httptest.NewRecorder()
+	batcherHandler.ServeHTTP(rr, req)
+
+	// then
+	assert.Equal(t, http.StatusUnsupportedMediaType, rr.Code)
+	assert.Equal(t, "Content-Type malformed", rr.Body.String())
+}
+
+func TestHandlerRejectWrongContentType(t *testing.T) {
+	// given an httpbatcher
+	batcherHandler := New()
+
+	// and a request with a wrong content type
+	req, err := http.NewRequest("POST", "localhost", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header.Set("Content-Type", "text/plain")
+
+	// when
+	rr := httptest.NewRecorder()
+	batcherHandler.ServeHTTP(rr, req)
+
+	// then
+	assert.Equal(t, http.StatusUnsupportedMediaType, rr.Code)
+	assert.Equal(t, "Content-Type must be multipart/mixed", rr.Body.String())
+}
+
+func TestHandlerRejectMultipartMixedWithoutBoundary(t *testing.T) {
+	// given an httpbatcher
+	batcherHandler := New()
+
+	// and a request with a wrong content type
+	req, err := http.NewRequest("POST", "localhost", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header.Set("Content-Type", "multipart/mixed")
+
+	// when
+	rr := httptest.NewRecorder()
+	batcherHandler.ServeHTTP(rr, req)
+
+	// then
+	assert.Equal(t, http.StatusUnsupportedMediaType, rr.Code)
+	assert.Equal(t, "Content-Type is missing boundary parameter", rr.Body.String())
+}
