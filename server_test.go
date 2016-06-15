@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var httpMethods = []string{
@@ -20,24 +21,21 @@ var httpMethods = []string{
 	http.MethodTrace,
 }
 
-func TestHandlerInterface(t *testing.T) {
-	var _ http.Handler = &batcher{}
-}
-
-func TestHandlerRejectNonPOSTMethods(t *testing.T) {
-	// given an httpbatcher
-	batcherHandler := New()
+func TestValidatorRejectNonPOSTMethods(t *testing.T) {
+	// given a validateBatchRequestHandler
+	v := validateBatchRequestHandler(func(w http.ResponseWriter, r *http.Request) {
+		// not expected to be called
+		assert.Fail(t, "Next handler should not be called if validation fails")
+	})
 
 	// when I pass a non POST request
 	for _, method := range httpMethods {
 		if method != http.MethodPost {
 			rr := httptest.NewRecorder()
 			req, err := http.NewRequest(method, "localhost", nil)
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.Nil(t, err)
 
-			batcherHandler.ServeHTTP(rr, req)
+			v.ServeHTTP(rr, req)
 
 			// then the error code is
 			assert.Equal(t, http.StatusMethodNotAllowed, rr.Code)
@@ -45,63 +43,66 @@ func TestHandlerRejectNonPOSTMethods(t *testing.T) {
 	}
 }
 
-func TestHandlerFailIfContentTypeMalformed(t *testing.T) {
-	// given an httpbatcher
-	batcherHandler := New()
+func TestValidatorFailIfContentTypeMalformed(t *testing.T) {
+	// given a validateBatchRequestHandler
+	v := validateBatchRequestHandler(func(w http.ResponseWriter, r *http.Request) {
+		// not expected to be called
+		assert.Fail(t, "Next handler should not be called if validation fails")
+	})
 
 	// and a request with a maflormed content type
 	req, err := http.NewRequest("POST", "localhost", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.Nil(t, err)
 
 	req.Header.Set("Content-Type", "")
 
 	// when
 	rr := httptest.NewRecorder()
-	batcherHandler.ServeHTTP(rr, req)
+	v.ServeHTTP(rr, req)
 
 	// then
 	assert.Equal(t, http.StatusUnsupportedMediaType, rr.Code)
 	assert.Equal(t, "Content-Type malformed", rr.Body.String())
 }
 
-func TestHandlerRejectWrongContentType(t *testing.T) {
-	// given an httpbatcher
-	batcherHandler := New()
+func TestValidatorRejectWrongContentType(t *testing.T) {
+	// given a validateBatchRequestHandler
+	v := validateBatchRequestHandler(func(w http.ResponseWriter, r *http.Request) {
+		// not expected to be called
+		assert.Fail(t, "Next handler should not be called if validation fails")
+	})
 
 	// and a request with a wrong content type
 	req, err := http.NewRequest("POST", "localhost", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.Nil(t, err)
 
 	req.Header.Set("Content-Type", "text/plain")
 
 	// when
 	rr := httptest.NewRecorder()
-	batcherHandler.ServeHTTP(rr, req)
+	v.ServeHTTP(rr, req)
 
 	// then
 	assert.Equal(t, http.StatusUnsupportedMediaType, rr.Code)
 	assert.Equal(t, "Content-Type must be multipart/mixed", rr.Body.String())
 }
 
-func TestHandlerRejectMultipartMixedWithoutBoundary(t *testing.T) {
-	// given an httpbatcher
-	batcherHandler := New()
+func TestValidatorRejectMultipartMixedWithoutBoundary(t *testing.T) {
+	// given a validateBatchRequestHandler
+	v := validateBatchRequestHandler(func(w http.ResponseWriter, r *http.Request) {
+		// not expected to be called
+		assert.Fail(t, "Next handler should not be called if validation fails")
+	})
 
 	// and a request with a wrong content type
 	req, err := http.NewRequest("POST", "localhost", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.Nil(t, err)
 
 	req.Header.Set("Content-Type", "multipart/mixed")
 
 	// when
 	rr := httptest.NewRecorder()
-	batcherHandler.ServeHTTP(rr, req)
+	v.ServeHTTP(rr, req)
 
 	// then
 	assert.Equal(t, http.StatusUnsupportedMediaType, rr.Code)
