@@ -1,6 +1,7 @@
 package httpbatcher
 
 import (
+	"mime"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -107,4 +108,24 @@ func TestValidatorRejectMultipartMixedWithoutBoundary(t *testing.T) {
 	// then
 	assert.Equal(t, http.StatusUnsupportedMediaType, rr.Code)
 	assert.Equal(t, "Content-Type is missing boundary parameter", rr.Body.String())
+}
+
+func TestNextIsCalledOnSuccessfulValidation(t *testing.T) {
+	// given a validateBatchRequestHandler
+	var nextCalled bool
+	v := validateBatchRequestHandler(func(w http.ResponseWriter, r *http.Request) {
+		nextCalled = true
+	})
+
+	// and a valid request
+	req, err := http.NewRequest("POST", "localhost", nil)
+	require.Nil(t, err)
+	req.Header.Set("Content-Type", mime.FormatMediaType("multipart/mixed", map[string]string{"boundary": "wuqhfkndk"}))
+
+	// when
+	rr := httptest.NewRecorder()
+	v.ServeHTTP(rr, req)
+
+	// then
+	assert.True(t, nextCalled)
 }
