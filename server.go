@@ -16,6 +16,11 @@ type requestExtractor interface {
 	Extract(boundary string, body io.Reader) ([]*http.Request, error)
 }
 
+// RequestExecutor represent the execution of a set of http.Requests independently by the scheduling strategy
+type RequestExecutor interface {
+	Execute([]*http.Request) ([]*http.Response, error)
+}
+
 // New instatiate an handler to manage http batch requests
 func New() http.Handler {
 	return &batcher{}
@@ -59,6 +64,21 @@ func extractPayloadHandler(extractor requestExtractor, next contextHandlerFunc) 
 			return
 		}
 		next(context.WithValue(c, "payload", requests), w, r)
+	}
+}
+
+func executeRequestsHandler(executor RequestExecutor, next contextHandlerFunc) contextHandlerFunc {
+	return func(c context.Context, w http.ResponseWriter, r *http.Request) {
+		requests := c.Value("payload")
+
+		responses, err := executor.Execute(requests.([]*http.Request))
+		if err != nil {
+			log.Println("Request execution failed")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		next(context.WithValue(c, "responses", responses), w, r)
 	}
 }
 

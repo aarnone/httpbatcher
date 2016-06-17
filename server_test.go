@@ -235,3 +235,90 @@ func TestExtractPayload500Failure(t *testing.T) {
 	// then
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }
+
+type fakeExecutor struct {
+	argRequests []*http.Request
+	responses   []*http.Response
+	err         error
+}
+
+func (fe *fakeExecutor) Execute(requests []*http.Request) ([]*http.Response, error) {
+	fe.argRequests = requests
+	if fe.err != nil {
+		return nil, fe.err
+	}
+
+	return fe.responses, nil
+}
+
+func TestExecuteRequestsSuccessful(t *testing.T) {
+	// given a good executor
+	executor := &fakeExecutor{
+		responses: []*http.Response{&http.Response{Status: "first"}, &http.Response{Status: "second"}},
+	}
+
+	// and the next handler
+	actualArgs := struct {
+		Context        context.Context
+		ResponseWriter http.ResponseWriter
+		Request        *http.Request
+	}{}
+
+	next := contextHandlerFunc(func(c context.Context, w http.ResponseWriter, r *http.Request) {
+		actualArgs.Context = c
+		actualArgs.ResponseWriter = w
+		actualArgs.Request = r
+	})
+
+	// and some fake args
+	requests := []*http.Request{&http.Request{Host: "one"}, &http.Request{Host: "two"}}
+	c := context.WithValue(nil, "payload", requests)
+
+	w := httptest.NewRecorder()
+	w.Header().Set("Say", "hello")
+
+	r := &http.Request{Body: ioutil.NopCloser(strings.NewReader("bodycontent"))}
+
+	// when
+	chf := executeRequestsHandler(executor, next)
+
+	chf.ServeHTTP(c, w, r)
+
+	// then
+	assert.Equal(t, w, actualArgs.ResponseWriter)
+	assert.Equal(t, r, actualArgs.Request)
+
+	assert.Equal(t, requests, executor.argRequests)
+
+	expectedContext := context.WithValue(c, "responses", executor.responses)
+	assert.Equal(t, expectedContext, actualArgs.Context)
+}
+
+func TestExecuteRequests500Failure(t *testing.T) {
+	// given a failing executor
+	executor := &fakeExecutor{
+		err: fmt.Errorf("Some generic error"),
+	}
+
+	// and the next handler
+	next := contextHandlerFunc(func(c context.Context, w http.ResponseWriter, r *http.Request) {
+		assert.Fail(t, "Next handler should not be called")
+	})
+
+	// and some fake args
+	requests := []*http.Request{&http.Request{Host: "one"}, &http.Request{Host: "two"}}
+	c := context.WithValue(nil, "payload", requests)
+
+	w := httptest.NewRecorder()
+	w.Header().Set("Say", "hello")
+
+	r := &http.Request{Body: ioutil.NopCloser(strings.NewReader("bodycontent"))}
+
+	// when
+	chf := executeRequestsHandler(executor, next)
+
+	chf.ServeHTTP(c, w, r)
+
+	// then
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
