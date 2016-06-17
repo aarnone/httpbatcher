@@ -1,6 +1,8 @@
 package httpbatcher
 
 import (
+	"io"
+	"log"
 	"mime"
 	"net/http"
 
@@ -8,6 +10,10 @@ import (
 )
 
 type batcher struct {
+}
+
+type requestExtractor interface {
+	Extract(boundary string, body io.Reader) ([]*http.Request, error)
 }
 
 // New instatiate an handler to manage http batch requests
@@ -41,6 +47,18 @@ func validateBatchRequestHandler(next contextHandlerFunc) contextHandlerFunc {
 		}
 
 		next(context.WithValue(c, "boundary", boundary), w, r)
+	}
+}
+
+func extractPayloadHandler(extractor requestExtractor, next contextHandlerFunc) contextHandlerFunc {
+	return func(c context.Context, w http.ResponseWriter, r *http.Request) {
+		requests, err := extractor.Extract(c.Value("boundary").(string), r.Body)
+		if err != nil {
+			log.Println("Requests extraction failed")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		next(context.WithValue(c, "payload", requests), w, r)
 	}
 }
 
