@@ -114,9 +114,16 @@ func TestValidatorRejectMultipartMixedWithoutBoundary(t *testing.T) {
 
 func TestNextIsCalledOnSuccessfulValidation(t *testing.T) {
 	// given a validateBatchRequestHandler
-	var nextCalled bool
+	actualArgs := struct {
+		Context        context.Context
+		ResponseWriter http.ResponseWriter
+		Request        *http.Request
+	}{}
+
 	v := validateBatchRequestHandler(func(c context.Context, w http.ResponseWriter, r *http.Request) {
-		nextCalled = true
+		actualArgs.Context = c
+		actualArgs.ResponseWriter = w
+		actualArgs.Request = r
 	})
 
 	// and a valid request
@@ -126,8 +133,12 @@ func TestNextIsCalledOnSuccessfulValidation(t *testing.T) {
 
 	// when
 	rr := httptest.NewRecorder()
+	rr.WriteHeader(http.StatusOK)
+
 	v.ServeHTTP(context.TODO(), rr, req)
 
 	// then
-	assert.True(t, nextCalled)
+	assert.Equal(t, req, actualArgs.Request)
+	assert.Equal(t, rr, actualArgs.ResponseWriter)
+	assert.Equal(t, "wuqhfkndk", actualArgs.Context.Value("boundary"))
 }

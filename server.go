@@ -32,13 +32,15 @@ func validateBatchRequestHandler(next contextHandlerFunc) contextHandlerFunc {
 			w.Write([]byte("Content-Type must be multipart/mixed"))
 			return
 		}
-		if params["boundary"] == "" {
+
+		boundary := params["boundary"]
+		if boundary == "" {
 			w.WriteHeader(http.StatusUnsupportedMediaType)
 			w.Write([]byte("Content-Type is missing boundary parameter"))
 			return
 		}
 
-		next(c, w, r)
+		next(context.WithValue(c, "boundary", boundary), w, r)
 	}
 }
 
