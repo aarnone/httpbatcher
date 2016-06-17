@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"golang.org/x/net/context"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,7 +26,7 @@ var httpMethods = []string{
 
 func TestValidatorRejectNonPOSTMethods(t *testing.T) {
 	// given a validateBatchRequestHandler
-	v := validateBatchRequestHandler(func(w http.ResponseWriter, r *http.Request) {
+	v := validateBatchRequestHandler(func(c context.Context, w http.ResponseWriter, r *http.Request) {
 		// not expected to be called
 		assert.Fail(t, "Next handler should not be called if validation fails")
 	})
@@ -36,7 +38,7 @@ func TestValidatorRejectNonPOSTMethods(t *testing.T) {
 			req, err := http.NewRequest(method, "localhost", nil)
 			require.Nil(t, err)
 
-			v.ServeHTTP(rr, req)
+			v.ServeHTTP(context.TODO(), rr, req)
 
 			// then the error code is
 			assert.Equal(t, http.StatusMethodNotAllowed, rr.Code)
@@ -46,7 +48,7 @@ func TestValidatorRejectNonPOSTMethods(t *testing.T) {
 
 func TestValidatorFailIfContentTypeMalformed(t *testing.T) {
 	// given a validateBatchRequestHandler
-	v := validateBatchRequestHandler(func(w http.ResponseWriter, r *http.Request) {
+	v := validateBatchRequestHandler(func(c context.Context, w http.ResponseWriter, r *http.Request) {
 		// not expected to be called
 		assert.Fail(t, "Next handler should not be called if validation fails")
 	})
@@ -59,7 +61,7 @@ func TestValidatorFailIfContentTypeMalformed(t *testing.T) {
 
 	// when
 	rr := httptest.NewRecorder()
-	v.ServeHTTP(rr, req)
+	v.ServeHTTP(context.TODO(), rr, req)
 
 	// then
 	assert.Equal(t, http.StatusUnsupportedMediaType, rr.Code)
@@ -68,7 +70,7 @@ func TestValidatorFailIfContentTypeMalformed(t *testing.T) {
 
 func TestValidatorRejectWrongContentType(t *testing.T) {
 	// given a validateBatchRequestHandler
-	v := validateBatchRequestHandler(func(w http.ResponseWriter, r *http.Request) {
+	v := validateBatchRequestHandler(func(c context.Context, w http.ResponseWriter, r *http.Request) {
 		// not expected to be called
 		assert.Fail(t, "Next handler should not be called if validation fails")
 	})
@@ -81,7 +83,7 @@ func TestValidatorRejectWrongContentType(t *testing.T) {
 
 	// when
 	rr := httptest.NewRecorder()
-	v.ServeHTTP(rr, req)
+	v.ServeHTTP(context.TODO(), rr, req)
 
 	// then
 	assert.Equal(t, http.StatusUnsupportedMediaType, rr.Code)
@@ -90,7 +92,7 @@ func TestValidatorRejectWrongContentType(t *testing.T) {
 
 func TestValidatorRejectMultipartMixedWithoutBoundary(t *testing.T) {
 	// given a validateBatchRequestHandler
-	v := validateBatchRequestHandler(func(w http.ResponseWriter, r *http.Request) {
+	v := validateBatchRequestHandler(func(c context.Context, w http.ResponseWriter, r *http.Request) {
 		// not expected to be called
 		assert.Fail(t, "Next handler should not be called if validation fails")
 	})
@@ -103,7 +105,7 @@ func TestValidatorRejectMultipartMixedWithoutBoundary(t *testing.T) {
 
 	// when
 	rr := httptest.NewRecorder()
-	v.ServeHTTP(rr, req)
+	v.ServeHTTP(context.TODO(), rr, req)
 
 	// then
 	assert.Equal(t, http.StatusUnsupportedMediaType, rr.Code)
@@ -113,7 +115,7 @@ func TestValidatorRejectMultipartMixedWithoutBoundary(t *testing.T) {
 func TestNextIsCalledOnSuccessfulValidation(t *testing.T) {
 	// given a validateBatchRequestHandler
 	var nextCalled bool
-	v := validateBatchRequestHandler(func(w http.ResponseWriter, r *http.Request) {
+	v := validateBatchRequestHandler(func(c context.Context, w http.ResponseWriter, r *http.Request) {
 		nextCalled = true
 	})
 
@@ -124,7 +126,7 @@ func TestNextIsCalledOnSuccessfulValidation(t *testing.T) {
 
 	// when
 	rr := httptest.NewRecorder()
-	v.ServeHTTP(rr, req)
+	v.ServeHTTP(context.TODO(), rr, req)
 
 	// then
 	assert.True(t, nextCalled)

@@ -3,6 +3,8 @@ package httpbatcher
 import (
 	"mime"
 	"net/http"
+
+	"golang.org/x/net/context"
 )
 
 type batcher struct {
@@ -13,8 +15,8 @@ func New() http.Handler {
 	return &batcher{}
 }
 
-func validateBatchRequestHandler(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func validateBatchRequestHandler(next contextHandlerFunc) contextHandlerFunc {
+	return func(c context.Context, w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
@@ -36,7 +38,7 @@ func validateBatchRequestHandler(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		next(w, r)
+		next(c, w, r)
 	}
 }
 
