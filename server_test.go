@@ -165,7 +165,7 @@ func (fe *fakeExtractor) Extract(boundary string, body io.Reader) ([]*http.Reque
 	return fe.requests, nil
 }
 
-func TestExtractPayloadSuccessful(t *testing.T) {
+func TestExtractPayloadHandlerSuccessful(t *testing.T) {
 	// given a good extractor
 	extractor := &fakeExtractor{
 		requests: []*http.Request{&http.Request{Host: "first"}, &http.Request{Host: "second"}},
@@ -208,7 +208,7 @@ func TestExtractPayloadSuccessful(t *testing.T) {
 	assert.Equal(t, expectedContext, actualArgs.Context)
 }
 
-func TestExtractPayload500Failure(t *testing.T) {
+func TestExtractPayloadHandler500Failure(t *testing.T) {
 	// given a failing extractor
 	extractor := &fakeExtractor{
 		err: fmt.Errorf("Some error"),
@@ -251,7 +251,7 @@ func (fe *fakeExecutor) Execute(requests []*http.Request) ([]*http.Response, err
 	return fe.responses, nil
 }
 
-func TestExecuteRequestsSuccessful(t *testing.T) {
+func TestExecuteRequestsHandlerSuccessful(t *testing.T) {
 	// given a good executor
 	executor := &fakeExecutor{
 		responses: []*http.Response{&http.Response{Status: "first"}, &http.Response{Status: "second"}},
@@ -294,7 +294,7 @@ func TestExecuteRequestsSuccessful(t *testing.T) {
 	assert.Equal(t, expectedContext, actualArgs.Context)
 }
 
-func TestExecuteRequests500Failure(t *testing.T) {
+func TestExecuteRequestsHandler500Failure(t *testing.T) {
 	// given a failing executor
 	executor := &fakeExecutor{
 		err: fmt.Errorf("Some generic error"),
@@ -321,4 +321,82 @@ func TestExecuteRequests500Failure(t *testing.T) {
 
 	// then
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
+
+type fakePacker struct {
+	argResponses []*http.Response
+	err          error
+	body         io.Reader
+	boundary     string
+}
+
+func (fp *fakePacker) Pack(responses []*http.Response) (string, io.Reader, error) {
+	fp.argResponses = responses
+
+	if fp.err != nil {
+		return "", nil, fp.err
+	}
+
+	return fp.boundary, fp.body, nil
+}
+
+func TestPackResponsesHandlerSuccessful(t *testing.T) {
+	// given a good packer
+	packer := &fakePacker{
+		boundary: "qjfoiwenienf",
+		body:     strings.NewReader("bodybodybody"),
+	}
+
+	// and the next handler
+	next := contextHandlerFunc(func(c context.Context, w http.ResponseWriter, r *http.Request) {
+		assert.Fail(t, "Next handler should not be called")
+	})
+
+	// and some fake args
+	responses := []*http.Response{&http.Response{Status: "one"}, &http.Response{Status: "two"}}
+	c := context.WithValue(nil, "responses", responses)
+	r := &http.Request{Body: ioutil.NopCloser(strings.NewReader("bodycontent"))}
+
+	// when
+	w := httptest.NewRecorder()
+	chf := packResponsesHandler(packer, next)
+
+	chf.ServeHTTP(c, w, r)
+
+	// then
+	assert.Equal(t, w.Code, http.StatusOK)
+
+	mediaType, params, err := mime.ParseMediaType(w.Header().Get("Content-Type"))
+	require.Nil(t, err)
+
+	assert.Equal(t, "multipart/mixed", mediaType)
+	assert.Equal(t, "qjfoiwenienf", params["boundary"])
+
+	assert.Equal(t, "bodybodybody", w.Body.String())
+}
+
+func TestPackResponsesHandler500Failure(t *testing.T) {
+	// given a failing packer
+	packer := &fakePacker{
+		err: fmt.Errorf("Some generic error"),
+	}
+
+	// and the next handler
+	next := contextHandlerFunc(func(c context.Context, w http.ResponseWriter, r *http.Request) {
+		assert.Fail(t, "Next handler should not be called")
+	})
+
+	// and some fake args
+	responses := []*http.Response{&http.Response{Status: "one"}, &http.Response{Status: "two"}}
+	c := context.WithValue(nil, "responses", responses)
+	r := &http.Request{Body: ioutil.NopCloser(strings.NewReader("bodycontent"))}
+
+	// when
+	w := httptest.NewRecorder()
+	chf := packResponsesHandler(packer, next)
+
+	chf.ServeHTTP(c, w, r)
+
+	// then
+	assert.Equal(t, w.Code, http.StatusInternalServerError)
 }

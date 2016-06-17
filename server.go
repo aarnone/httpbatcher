@@ -16,6 +16,10 @@ type requestExtractor interface {
 	Extract(boundary string, body io.Reader) ([]*http.Request, error)
 }
 
+type responsePacker interface {
+	Pack(responses []*http.Response) (boundary string, body io.Reader, err error)
+}
+
 // RequestExecutor represent the execution of a set of http.Requests independently by the scheduling strategy
 type RequestExecutor interface {
 	Execute([]*http.Request) ([]*http.Response, error)
@@ -79,6 +83,26 @@ func executeRequestsHandler(executor RequestExecutor, next contextHandlerFunc) c
 		}
 
 		next(context.WithValue(c, "responses", responses), w, r)
+	}
+}
+
+func packResponsesHandler(packer responsePacker, next contextHandlerFunc) contextHandlerFunc {
+	return func(c context.Context, w http.ResponseWriter, r *http.Request) {
+		responses := c.Value("responses").([]*http.Response)
+
+		boundary, body, err := packer.Pack(responses)
+		if err != nil {
+			log.Println("Response packing failed")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		mediaType := mime.FormatMediaType("multipart/mixed", map[string]string{"boundary": boundary})
+
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", mediaType)
+
+		io.Copy(w, body)
 	}
 }
 
