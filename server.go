@@ -12,10 +12,6 @@ import (
 type batcher struct {
 }
 
-type requestExtractor interface {
-	Extract(boundary string, body io.Reader) ([]*http.Request, error)
-}
-
 type responsePacker interface {
 	Pack(responses []*http.Response) (boundary string, body io.Reader, err error)
 }
