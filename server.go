@@ -9,9 +9,6 @@ import (
 	"golang.org/x/net/context"
 )
 
-type batcher struct {
-}
-
 // RequestExecutor represent the execution of a set of http.Requests independently by the scheduling strategy
 type RequestExecutor interface {
 	// Execute the requests and return the corresponding responses
@@ -26,7 +23,14 @@ func (ref requestExecutorFunc) Execute(requests []*http.Request) ([]*http.Respon
 
 // New instatiate an handler to manage http batch requests
 func New() http.Handler {
-	return &batcher{}
+	requestExtractor := requestExtractorFunc(simpleRequestExtractor)
+	reqestExecutor := requestExecutorFunc(ExecuteSerially)
+	responsePacker := responsePackerFunc(simpleResponsePacker)
+	return initHTTPHandler(
+		validateBatchRequestHandler(
+			extractPayloadHandler(requestExtractor,
+				executeRequestsHandler(reqestExecutor,
+					packResponsesHandler(responsePacker, nil)))))
 }
 
 func validateBatchRequestHandler(next contextHandlerFunc) contextHandlerFunc {
@@ -103,7 +107,4 @@ func packResponsesHandler(packer responsePacker, next contextHandlerFunc) contex
 
 		io.Copy(w, body)
 	}
-}
-
-func (b *batcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
