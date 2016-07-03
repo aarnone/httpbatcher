@@ -400,3 +400,20 @@ func TestPackResponsesHandler500Failure(t *testing.T) {
 	// then
 	assert.Equal(t, w.Code, http.StatusInternalServerError)
 }
+
+func TestRequestExecutorFunc(t *testing.T) {
+	var args = struct{ requests []*http.Request }{}
+
+	executor := requestExecutorFunc(func(requests []*http.Request) ([]*http.Response, error) {
+		args.requests = requests
+		return someResponses(3), fmt.Errorf("some error")
+	})
+
+	requests := someRequests(3)
+	actualResponses, err := executor.Execute(requests)
+
+	assert.Equal(t, requests, args.requests)
+	assert.EqualError(t, err, "some error")
+	assert.Equal(t, actualResponses, someResponses(3))
+
+}

@@ -12,13 +12,16 @@ import (
 type batcher struct {
 }
 
-type responsePacker interface {
-	Pack(responses []*http.Response) (boundary string, body io.Reader, err error)
-}
-
 // RequestExecutor represent the execution of a set of http.Requests independently by the scheduling strategy
 type RequestExecutor interface {
+	// Execute the requests and return the corresponding responses
 	Execute([]*http.Request) ([]*http.Response, error)
+}
+
+type requestExecutorFunc func([]*http.Request) ([]*http.Response, error)
+
+func (ref requestExecutorFunc) Execute(requests []*http.Request) ([]*http.Response, error) {
+	return ref(requests)
 }
 
 // New instatiate an handler to manage http batch requests
