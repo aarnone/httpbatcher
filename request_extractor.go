@@ -33,6 +33,10 @@ func simpleRequestExtractor(boundary string, reader io.Reader) ([]*http.Request,
 		if err != nil {
 			return nil, fmt.Errorf("can't parse the multipart body: %v", err)
 		}
+
+		// RequestURI is allowed only for inbound requests
+		partReq.RequestURI = ""
+
 		requests = append(requests, partReq)
 	}
 

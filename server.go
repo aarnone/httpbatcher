@@ -80,7 +80,7 @@ func executeRequestsHandler(executor RequestExecutor, next contextHandlerFunc) c
 
 		responses, err := executor.Execute(requests.([]*http.Request))
 		if err != nil {
-			log.Println("Request execution failed")
+			log.Printf("Request execution failed: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

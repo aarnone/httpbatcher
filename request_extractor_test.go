@@ -54,6 +54,7 @@ func TestSimpleRequestExtractor(t *testing.T) {
 		expectedRequest, err := http.ReadRequest(bufio.NewReader(&buf))
 		require.Nil(t, err)
 
+		expectedRequest.RequestURI = "" // allowed only in incoming requests, not client requests
 		assert.Equal(t, expectedRequest, actualRequests[i])
 	}
 }
