@@ -102,8 +102,8 @@ func packResponsesHandler(packer responsePacker, next contextHandlerFunc) contex
 
 		mediaType := mime.FormatMediaType("multipart/mixed", map[string]string{"boundary": boundary})
 
-		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", mediaType)
+		w.WriteHeader(http.StatusOK)
 
 		io.Copy(w, body)
 	}
